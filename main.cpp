@@ -95,7 +95,7 @@ void CreateMaterial(SDK::UWorld *world, const char *materialName) {
   if (Chams::material) {
     Chams::material->bDisableDepthTest = 1;
     Chams::material->Wireframe = 1;
-    Chams::material->BlendMode = SDK::EBlendMode::BLEND_Translucent;
+    Chams::material->BlendMode = SDK::EBlendMode::BLEND_Additive;
     Chams::material->MaterialDomain = SDK::EMaterialDomain::MD_Surface;
     Chams::material->AllowTranslucentCustomDepthWrites = 1;
     Chams::material->bIsBlendable = 1;
@@ -672,6 +672,8 @@ void Shitbot() {
     }
   }
 
+  __try {
+  
   if (closestActor && Settings::Aimbot::bEnabled) {
     if (GetAsyncKeyState(Settings::Aimbot::hotkey)) {
       if (!localController->PlayerCameraManager) {
@@ -683,6 +685,11 @@ void Shitbot() {
 
     
     }
+  }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    U_LOG("SEH Exception caught! Code: 0x%08X - Continuing execution.",
+          _exception_code());
+    return;
   }
   
 }
@@ -954,6 +961,8 @@ void ShitESP() {
         ImGui::PopStyleVar(2);
       }
     }
+    if (Settings::ESP::bSkeleton)
+      DrawSkeleton(baseClass, IM_COL32_WHITE);
 
     SDK::FVector2D screen;
 
@@ -1106,7 +1115,15 @@ HRESULT APIENTRY hkPresent(IDXGISwapChain3 *pSwapChain, UINT SyncInterval,
     return oPresent(pSwapChain, SyncInterval, Flags);
   }
 
-  Shitbot();
+  __try {
+
+      Shitbot();
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    U_LOG("SEH Exception caught! Code: 0x%08X - Continuing execution.",
+          _exception_code());
+
+    return oPresent(pSwapChain, SyncInterval, Flags);
+  }
 
   ImGui::GetBackgroundDrawList()->AddCircle(
       ImVec2(sSize.width / 2, sSize.height / 2), Settings::Aimbot::FOV,
@@ -1244,7 +1261,8 @@ DWORD WINAPI MainThread(LPVOID lpParameter) {
   /// Material M_Ultimate_Glow.M_Ultimate_Glow
   // Material M_Versatile_5_100.M_Versatile_5_100
 
-  Chams::CreateMaterial(G::pWorld, "Material M_30_Metal.M_30_Metal");
+  // not useful
+  //Chams::CreateMaterial(G::pWorld, "Material M_30_Metal.M_30_Metal");
 
   bool WindowFocus = false;
   while (WindowFocus == false) {
